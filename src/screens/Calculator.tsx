@@ -9,70 +9,169 @@ enum CalculatorActionKind {
   ADD = 'ADD',
   MUL = 'MUL',
   SUB = 'SUB',
+  EQUAL = 'EQUAL',
   DIV = 'DIV',
   MOD = 'MOD',
+  DEL = 'DEL',
   ADD_CHAR = 'ADD_CHAR',
 }
 
 interface CalculatorAction {
   type: CalculatorActionKind;
-  payload: number | string | null;
+  payload: number | null;
 }
 // An interface for our state
-interface CalculatorState {
+type CalculatorState = {
   result: number | null;
-  input: number | null;
+  last_op: CalculatorActionKind | null;
+  input: string | null;
+  left_inp: string | null;
   currentInput: string;
-}
+};
+const initialState: CalculatorState = {
+  input: null,
+  currentInput: '',
+  result: null,
+  left_inp: null,
+  last_op: null,
+};
+
 function calculatorReducer(state: CalculatorState, action: CalculatorAction) {
   const {payload, type} = action;
 
   switch (type) {
+    // add char
     case CalculatorActionKind.ADD_CHAR:
-      if (!payload) {
-        return;
+      if (payload == null || payload === undefined) {
+        return state;
       }
+      console.log('state: ', state);
+      const input1 =
+        state.input == null
+          ? payload.toString()
+          : state.input + payload.toString();
+      const currentInput = state.currentInput
+        ? state.currentInput + payload.toString()
+        : input1;
 
-      if (!state.currentInput) {
-        return {
-          ...state,
-          currentInput: payload,
-        };
-      }
-
-      if (state.input) {
-        return {
-          ...state,
-          input: payload,
-        };
+      if (state.last_op) {
+        console.log('state.last : ', state);
+        state.result = MakeOperation(
+          Number(state.left_inp),
+          Number(input1),
+          state.last_op,
+        );
       }
 
       return {
         ...state,
-        currentInput: state.currentInput + payload.toString(),
-      };
-    case CalculatorActionKind.ADD:
-      const input = state.input;
-      const result = Number(state.currentInput) + Number(input);
-      const currentInput = state.currentInput + '+';
-      return {
-        ...state,
-        result,
-        input,
+        input: input1,
         currentInput,
       };
+    // sum number
+    case CalculatorActionKind.ADD:
+      // make sure that sign doesn't exist
+      if (state.input == null) {
+        return state;
+      }
+
+      state.currentInput = state.currentInput + '+';
+      state.left_inp = state.input;
+      state.last_op = type;
+      state.input = null;
+
+      return {...state};
+
+    case CalculatorActionKind.SUB:
+      // make sure that sign doesn't exist
+      if (state.input === '-') {
+        return {...state};
+      }
+
+      if (state.input == null && state.left_inp == null) {
+        state.input = '-';
+        state.currentInput = state.currentInput + '-';
+      } else {
+        state.left_inp = state.input;
+        state.input = null;
+        state.currentInput = state.currentInput + '-';
+      }
+
+      return {...state};
+    case CalculatorActionKind.MUL:
+      // make sure that sign doesn't exist
+      if (!state.input) {
+        return state;
+      }
+
+      state.currentInput = state.currentInput + '×';
+      state.left_inp = state.input;
+      state.last_op = type;
+      state.input = null;
+
+      return {...state};
+
+    case CalculatorActionKind.DIV:
+      // make sure that sign doesn't exist
+      if (!state.input) {
+        return state;
+      }
+
+      state.currentInput = state.currentInput + '÷';
+      state.left_inp = state.input;
+      state.last_op = type;
+      state.input = null;
+
+      return {...state};
+
+    case CalculatorActionKind.EQUAL:
+      if (!state.input) {
+        return {...state};
+      }
+
+      if (state.last_op) {
+        state.result = MakeOperation(
+          Number(state.left_inp),
+          Number(state.input),
+          state.last_op,
+        );
+      } else {
+        state.result = Number(state.input);
+      }
+
+      state.input = null;
+      state.currentInput = '';
+      return {...state};
+
+    case CalculatorActionKind.DEL:
+      return initialState;
+    default:
+      return {...state};
+  }
+}
+
+function MakeOperation(
+  left_inp: number,
+  right_inp: number,
+  op: CalculatorActionKind,
+) {
+  switch (op) {
+    case CalculatorActionKind.ADD:
+      return left_inp + right_inp;
+    case CalculatorActionKind.MUL:
+      return left_inp * right_inp;
+    case CalculatorActionKind.SUB:
+      return left_inp - right_inp;
+    case CalculatorActionKind.DIV:
+      return left_inp / right_inp;
 
     default:
-      return state;
+      return left_inp;
   }
 }
 
 const Calculator = () => {
-  const [calState, dispatch] = useReducer(calculatorReducer, {
-    result: null,
-    input: null,
-    currentInput: '',
-  });
+  const [calState, dispatch] = useReducer(calculatorReducer, initialState);
 
   const handlerAddChar = (payload: number) => () =>
     dispatch({type: CalculatorActionKind.ADD_CHAR, payload});
@@ -181,7 +280,11 @@ const Calculator = () => {
           </TouchableOpacity>
 
           {/*  */}
-          <TouchableOpacity style={[globalStyles.btn, globalStyles.del_btn]}>
+          <TouchableOpacity
+            style={[globalStyles.btn, globalStyles.del_btn]}
+            onPress={() => {
+              dispatch({type: CalculatorActionKind.DEL, payload: null});
+            }}>
             <Text style={globalStyles.text_btn}>Del</Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -189,7 +292,11 @@ const Calculator = () => {
             onPress={handlerAddChar(0)}>
             <Text style={globalStyles.text_btn}>0</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[globalStyles.btn, globalStyles.equal_btn]}>
+          <TouchableOpacity
+            style={[globalStyles.btn, globalStyles.equal_btn]}
+            onPress={() => {
+              dispatch({type: CalculatorActionKind.EQUAL, payload: null});
+            }}>
             <Text style={[globalStyles.text_btn, {color: colors.del_bg}]}>
               =
             </Text>
