@@ -1,223 +1,192 @@
+/* eslint-disable react-native/no-inline-styles */
 import {View, Text, TouchableOpacity} from 'react-native';
 import React, {useReducer} from 'react';
 import {colors} from '../utils/colors';
 
 import {styles as globalStyles} from '../utils/globalStyles';
-
+import DigitButton from '../components/DigitButton';
+import OperationButton from '../components/OperationButton';
+const operations = {
+  add: '+',
+  mod: '%',
+  mul: '×',
+  div: '÷',
+  sub: '-',
+};
 // defining types
 enum CalculatorActionKind {
-  ADD = 'ADD',
-  MUL = 'MUL',
-  SUB = 'SUB',
+  CLEAR = 'CLEAR',
+  EVALUATE = 'EVALUATE',
+  OPERATION = 'OPERATION',
   EQUAL = 'EQUAL',
-  DIV = 'DIV',
-  MOD = 'MOD',
+  REMOVE_DIGIT = 'DIV',
   DEL = 'DEL',
-  ADD_CHAR = 'ADD_CHAR',
+  ADD_DIGIT = 'ADD_DIGIT',
 }
 
 interface CalculatorAction {
   type: CalculatorActionKind;
-  payload: number | null;
+  payload: string | null;
 }
 // An interface for our state
 type CalculatorState = {
-  result: number | null;
-  last_op: CalculatorActionKind | null;
-  input: string | null;
-  left_inp: string | null;
-  currentInput: string;
+  operation: string | null;
+  currentOperand: string | null;
+  previousOperand: string | null;
 };
 const initialState: CalculatorState = {
-  input: null,
-  currentInput: '',
-  result: null,
-  left_inp: null,
-  last_op: null,
+  operation: null,
+  currentOperand: null,
+  previousOperand: null,
 };
 
 function calculatorReducer(state: CalculatorState, action: CalculatorAction) {
   const {payload, type} = action;
 
   switch (type) {
-    // add char
-    case CalculatorActionKind.ADD_CHAR:
-      if (payload == null || payload === undefined) {
+    case CalculatorActionKind.ADD_DIGIT:
+      if (state.currentOperand == null) {
+        return {
+          ...state,
+          currentOperand: `${payload}`,
+        };
+      }
+      if (state.currentOperand.includes('.') && payload === '.') {
         return state;
       }
-      console.log('state: ', state);
-      const input1 =
-        state.input == null
-          ? payload.toString()
-          : state.input + payload.toString();
-      const currentInput = state.currentInput
-        ? state.currentInput + payload.toString()
-        : input1;
 
-      if (state.last_op) {
-        console.log('state.last : ', state);
-        state.result = MakeOperation(
-          Number(state.left_inp),
-          Number(input1),
-          state.last_op,
-        );
+      if (state.currentOperand === '0' && payload === '0') {
+        return state;
+      }
+      return {
+        ...state,
+        currentOperand: `${state.currentOperand}${payload}`,
+      };
+
+    case CalculatorActionKind.OPERATION:
+      if (state.currentOperand == null && state.operation == null) {
+        return state;
+      }
+
+      if (state.currentOperand == null) {
+        return {
+          ...state,
+          operation: payload,
+        };
+      }
+
+      if (state.previousOperand == null) {
+        return {
+          ...state,
+          previousOperand: state.currentOperand,
+          currentOperand: null,
+          operation: payload,
+        };
       }
 
       return {
         ...state,
-        input: input1,
-        currentInput,
+        previousOperand: evaluate(state),
+        operation: payload,
+        currentOperand: null,
       };
-    // sum number
-    case CalculatorActionKind.ADD:
-      // make sure that sign doesn't exist
-      if (state.input == null) {
-        return state;
-      }
-
-      state.currentInput = state.currentInput + '+';
-
-      if (state.last_op) {
-        state.left_inp = MakeOperation(
-          Number(state.left_inp),
-          Number(state.input),
-          state.last_op,
-        ).toString();
-      } else {
-        state.left_inp = state.input;
-      }
-
-      state.last_op = type;
-      state.input = null;
-
-      return {...state};
-
-    case CalculatorActionKind.SUB:
-      // make sure that sign doesn't exist
-      if (state.input === '-') {
-        return {...state};
-      }
-
-      if (state.input == null && state.left_inp == null) {
-        state.input = '-';
-      } else {
-        if (state.last_op) {
-          state.left_inp = MakeOperation(
-            Number(state.left_inp),
-            Number(state.input),
-            state.last_op,
-          ).toString();
-        } else {
-          state.left_inp = state.input;
-        }
-
-        // state.left_inp = state.input;
-        state.input = null;
-        state.last_op = type;
-      }
-
-      state.currentInput = state.currentInput + '-';
-
-      return {...state};
-    case CalculatorActionKind.MUL:
-      // make sure that sign doesn't exist
-      if (state.input == null) {
-        return state;
-      }
-
-      state.currentInput = state.currentInput + '×';
-
-      if (state.last_op) {
-        state.left_inp = MakeOperation(
-          Number(state.left_inp),
-          Number(state.input),
-          state.last_op,
-        ).toString();
-      } else {
-        state.left_inp = state.input;
-      }
-
-      state.last_op = type;
-      state.input = null;
-
-      return {...state};
-
-    case CalculatorActionKind.DIV:
-      // make sure that sign doesn't exist
-      if (!state.input) {
-        return state;
-      }
-
-      state.currentInput = state.currentInput + '÷';
-      state.left_inp = state.input;
-      state.last_op = type;
-      state.input = null;
-
-      return {...state};
+    case CalculatorActionKind.REMOVE_DIGIT:
+      return {
+        ...state,
+        currentOperand: `${state.currentOperand?.slice(
+          0,
+          state.currentOperand.length - 1,
+        )}`,
+      };
+    case CalculatorActionKind.CLEAR:
+      return initialState;
 
     case CalculatorActionKind.EQUAL:
-      if (!state.input) {
-        return {...state};
+      if (state.currentOperand == null && state.operation == null) {
+        return state;
       }
-
-      if (state.last_op) {
-        state.result = MakeOperation(
-          Number(state.left_inp),
-          Number(state.input),
-          state.last_op,
-        );
-      } else {
-        state.result = Number(state.input);
+      if (state.currentOperand == null && state.previousOperand != null) {
+        return {
+          ...state,
+          previousOperand: state.currentOperand,
+          currentOperand: null,
+          operation: payload,
+        };
       }
+      return {
+        ...state,
+        previousOperand: evaluate(state),
+        operation: payload,
+        currentOperand: null,
+      };
 
-      state.input = null;
-      state.currentInput = '';
-      return {...state};
-
-    case CalculatorActionKind.DEL:
-      return initialState;
     default:
-      return {...state};
+      return state;
   }
 }
 
-function MakeOperation(
-  left_inp: number,
-  right_inp: number,
-  op: CalculatorActionKind,
-) {
-  switch (op) {
-    case CalculatorActionKind.ADD:
-      return left_inp + right_inp;
-    case CalculatorActionKind.MUL:
-      return left_inp * right_inp;
-    case CalculatorActionKind.SUB:
-      return left_inp - right_inp;
-    case CalculatorActionKind.DIV:
-      return left_inp / right_inp;
-
-    default:
-      return left_inp;
+function evaluate({
+  currentOperand,
+  operation,
+  previousOperand,
+}: CalculatorState) {
+  let result = '';
+  const prev = parseFloat(previousOperand as string);
+  const nex = parseFloat(currentOperand as string);
+  switch (operation) {
+    case operations.add:
+      result = (prev + nex).toString();
+      break;
+    case operations.mod:
+      result = (prev % nex).toString();
+      break;
+    case operations.mul:
+      result = (prev * nex).toString();
+      break;
+    case operations.div:
+      result = (prev / nex).toString();
+      break;
+    case operations.sub:
+      result = (prev - nex).toString();
+      break;
   }
+
+  return result;
 }
 
 const Calculator = () => {
   const [calState, dispatch] = useReducer(calculatorReducer, initialState);
+  //
+  const addDigitHandler = (digit: string) => {
+    dispatch({type: CalculatorActionKind.ADD_DIGIT, payload: digit});
+  };
 
-  const handlerAddChar = (payload: number) => () =>
-    dispatch({type: CalculatorActionKind.ADD_CHAR, payload});
-  const handlerOperation = (type: CalculatorActionKind) => () =>
-    dispatch({type, payload: null});
+  //
+  const removeDigitHandler = (digit: string) => {
+    dispatch({type: CalculatorActionKind.REMOVE_DIGIT, payload: digit});
+  };
 
+  //
+  const clearDigitHandler = () => {
+    dispatch({type: CalculatorActionKind.CLEAR, payload: null});
+  };
+  const handlerOperation = (op: string) => {
+    dispatch({
+      type: CalculatorActionKind.OPERATION,
+      payload: op,
+    });
+  };
   return (
     <View style={globalStyles.cal_btn}>
       <View style={globalStyles.result_view}>
         <View>
-          <Text style={globalStyles.text_result}>{calState.currentInput}</Text>
+          <Text style={globalStyles.text_result}>{`${
+            calState.previousOperand ? calState.previousOperand : ''
+          }${calState.operation ? calState.operation : ''}`}</Text>
         </View>
         <View>
           <Text style={[globalStyles.text_result, globalStyles.text_op]}>
-            {calState.result}
+            {calState.currentOperand ? calState.currentOperand : ''}
           </Text>
         </View>
       </View>
@@ -227,102 +196,47 @@ const Calculator = () => {
           justifyContent: 'flex-end',
         }}>
         <View style={globalStyles.wrap_btn}>
-          <TouchableOpacity
-            style={[globalStyles.btn, globalStyles.operator_btn]}
-            onPress={handlerOperation(CalculatorActionKind.ADD)}>
-            <Text style={globalStyles.text_btn}>+</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[globalStyles.btn, globalStyles.operator_btn]}>
-            <Text style={globalStyles.text_btn}>(</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[globalStyles.btn, globalStyles.operator_btn]}
-            onPress={handlerOperation(CalculatorActionKind.ADD)}>
-            <Text style={globalStyles.text_btn}>)</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[globalStyles.btn, globalStyles.operator_btn]}
-            onPress={handlerOperation(CalculatorActionKind.MOD)}>
-            <Text style={globalStyles.text_btn}>%</Text>
-          </TouchableOpacity>
           {/*  */}
-          <TouchableOpacity
-            style={[globalStyles.btn, globalStyles.operator_btn]}
-            onPress={handlerOperation(CalculatorActionKind.DIV)}>
-            <Text style={globalStyles.text_btn}>÷</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={globalStyles.btn}
-            onPress={handlerAddChar(9)}>
-            <Text style={globalStyles.text_btn}>9</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={globalStyles.btn}
-            onPress={handlerAddChar(8)}>
-            <Text style={globalStyles.text_btn}>8</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={globalStyles.btn}
-            onPress={handlerAddChar(7)}>
-            <Text style={globalStyles.text_btn}>7</Text>
-          </TouchableOpacity>
-          {/*  */}
-          <TouchableOpacity
-            style={[globalStyles.btn, globalStyles.operator_btn]}
-            onPress={handlerOperation(CalculatorActionKind.MUL)}>
-            <Text style={globalStyles.text_btn}>×</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={globalStyles.btn}
-            onPress={handlerAddChar(6)}>
-            <Text style={globalStyles.text_btn}>6</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={globalStyles.btn}
-            onPress={handlerAddChar(5)}>
-            <Text style={globalStyles.text_btn}>5</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={globalStyles.btn}
-            onPress={handlerAddChar(4)}>
-            <Text style={globalStyles.text_btn}>4</Text>
-          </TouchableOpacity>
-          {/*  */}
-          <TouchableOpacity
-            style={[globalStyles.btn, globalStyles.operator_btn]}
-            onPress={handlerOperation(CalculatorActionKind.SUB)}>
-            <Text style={globalStyles.text_btn}>-</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={globalStyles.btn}
-            onPress={handlerAddChar(3)}>
-            <Text style={globalStyles.text_btn}>3</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={globalStyles.btn}
-            onPress={handlerAddChar(2)}>
-            <Text style={globalStyles.text_btn}>2</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={globalStyles.btn}
-            onPress={handlerAddChar(1)}>
-            <Text style={globalStyles.text_btn}>1</Text>
-          </TouchableOpacity>
+          <OperationButton op={operations.div} dispatch={handlerOperation} />
+
+          <OperationButton op={operations.mod} dispatch={handlerOperation} />
+
+          <DigitButton digit="." dispatch={addDigitHandler} />
+
+          <DigitButton
+            style={[globalStyles.btn, globalStyles.del_btn]}
+            digit="DEL"
+            dispatch={clearDigitHandler}
+          />
 
           {/*  */}
-          <TouchableOpacity
+          <OperationButton op={operations.add} dispatch={handlerOperation} />
+
+          <DigitButton digit="9" dispatch={addDigitHandler} />
+          <DigitButton digit="8" dispatch={addDigitHandler} />
+          <DigitButton digit="7" dispatch={addDigitHandler} />
+
+          {/*  */}
+          <OperationButton op={operations.mul} dispatch={handlerOperation} />
+
+          <DigitButton digit="6" dispatch={addDigitHandler} />
+          <DigitButton digit="5" dispatch={addDigitHandler} />
+          <DigitButton digit="4" dispatch={addDigitHandler} />
+          {/*  */}
+          <OperationButton op={operations.sub} dispatch={handlerOperation} />
+
+          <DigitButton digit="3" dispatch={addDigitHandler} />
+          <DigitButton digit="2" dispatch={addDigitHandler} />
+          <DigitButton digit="1" dispatch={addDigitHandler} />
+
+          {/*  */}
+          <DigitButton
+            digit="AC"
+            dispatch={removeDigitHandler}
             style={[globalStyles.btn, globalStyles.del_btn]}
-            onPress={() => {
-              dispatch({type: CalculatorActionKind.DEL, payload: null});
-            }}>
-            <Text style={globalStyles.text_btn}>Del</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={globalStyles.btn}
-            onPress={handlerAddChar(0)}>
-            <Text style={globalStyles.text_btn}>0</Text>
-          </TouchableOpacity>
+          />
+
+          <DigitButton digit="0" dispatch={addDigitHandler} />
           <TouchableOpacity
             style={[globalStyles.btn, globalStyles.equal_btn]}
             onPress={() => {
