@@ -76,7 +76,17 @@ function calculatorReducer(state: CalculatorState, action: CalculatorAction) {
       }
 
       state.currentInput = state.currentInput + '+';
-      state.left_inp = state.input;
+
+      if (state.last_op) {
+        state.left_inp = MakeOperation(
+          Number(state.left_inp),
+          Number(state.input),
+          state.last_op,
+        ).toString();
+      } else {
+        state.left_inp = state.input;
+      }
+
       state.last_op = type;
       state.input = null;
 
@@ -90,22 +100,43 @@ function calculatorReducer(state: CalculatorState, action: CalculatorAction) {
 
       if (state.input == null && state.left_inp == null) {
         state.input = '-';
-        state.currentInput = state.currentInput + '-';
       } else {
-        state.left_inp = state.input;
+        if (state.last_op) {
+          state.left_inp = MakeOperation(
+            Number(state.left_inp),
+            Number(state.input),
+            state.last_op,
+          ).toString();
+        } else {
+          state.left_inp = state.input;
+        }
+
+        // state.left_inp = state.input;
         state.input = null;
-        state.currentInput = state.currentInput + '-';
+        state.last_op = type;
       }
+
+      state.currentInput = state.currentInput + '-';
 
       return {...state};
     case CalculatorActionKind.MUL:
       // make sure that sign doesn't exist
-      if (!state.input) {
+      if (state.input == null) {
         return state;
       }
 
       state.currentInput = state.currentInput + '×';
-      state.left_inp = state.input;
+
+      if (state.last_op) {
+        state.left_inp = MakeOperation(
+          Number(state.left_inp),
+          Number(state.input),
+          state.last_op,
+        ).toString();
+      } else {
+        state.left_inp = state.input;
+      }
+
       state.last_op = type;
       state.input = null;
 
