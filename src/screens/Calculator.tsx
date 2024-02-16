@@ -74,6 +74,10 @@ function calculatorReducer(state: CalculatorState, action: CalculatorAction) {
       };
 
     case CalculatorActionKind.OPERATION:
+      if (state.override) {
+        return initialState;
+      }
+
       if (state.currentOperand == null && state.operation == null) {
         return state;
       }

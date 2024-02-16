@@ -1,56 +1,12 @@
-CAHIER DES CHARGES
-Cahier des charges pour l'amélioration du rendement de la production de cacao
 
-Nom de l’entreprise :ADJI SAS                                                
-Adresse : LOGPOM
-Tel : +237 6 52572871
+🚀 Découvrez ma toute nouvelle application développée avec React Native ! 📱✨
 
-1 - PRÉSENTATION DE L’ENTREPRISE
-ADJI SAS  est une entreprise qui fait dans la culture de Cacao de qualité supérieure.
-2 PRÉSENTATION DU PROJET
-L'entreprise ADJI SAS, spécialisée dans la production de cacao, souhaite améliorer son rendement afin de répondre à la demande croissante et d'augmenter sa compétitivité sur le marché.
-2. Objectifs
-L'objectif principal de ce projet est d'augmenter le rendement de la production de cacao de l'entreprise ADJI SAS de 30% d'ici 3 ans.
-3. Défis
-Les principaux défis à relever pour atteindre cet objectif sont les suivants :
-Améliorer la qualité des plants de cacao
-Lutter contre les maladies et les parasites
-Optimiser les techniques de fertilisation et d'irrigation
-Améliorer les conditions de travail des agriculteurs
-4. Solutions
-Pour relever ces défis, l'entreprise X souhaite mettre en place les solutions suivantes :
-Amélioration des plants de cacao
-Introduction de nouvelles variétés plus résistantes aux maladies et aux parasites
-Multiplication des plants par des techniques de greffage et de bouturage
+Il s'agit d'une calculatrice offrant des operations de base pour des calculs mathetique simple.
 
+J'ai utilisé le hook `useReducer` de React pour gérer efficacement toute la logique de l'application, offrant une expérience de calcul fluide et rapide. 🧮💨
 
-Lutte contre les maladies et les parasites
-Mise en place d'un programme de surveillance et de traitement phytosanitaire
-Utilisation de pesticides biologiques et de méthodes de lutte culturales
+Le design est inspiré d'un article sur Dribbble, apportant une esthétique moderne et conviviale à l'application. 🎨
 
+🎥 La démo en vidéo 
 
-Optimisation des techniques de fertilisation et d'irrigation
-Réalisation d'analyses de sol pour déterminer les besoins en nutriments
-Mise en place d'un système d'irrigation goutte-à-goutte
-
-
-Amélioration des conditions de travail des agriculteurs
-Formation des agriculteurs aux bonnes pratiques agricoles
-Mise en place d'un système de protection sociale
-
-
-5. Planning
-Le projet sera réalisé en plusieurs phases :
-Phase 1 (6 mois): Diagnostic de la situation actuelle et identification des solutions possibles
-Phase 2 (12 mois): Mise en place des solutions et suivi des résultats
-Phase 3 (6 mois): Evaluation des résultats et ajustements nécessaires
-6. Budget
-Le budget total du projet est estimé à 1 million d'euros.
-7. Conclusion
-L'amélioration du rendement de la production de cacao est un enjeu majeur pour l'entreprise X. Ce projet permettra à l'entreprise d'atteindre ses objectifs de croissance et de répondre aux attentes de ses clients.
-8. Annexes
-Annexe 1 : Liste des maladies et parasites du cacao
-Annexe 2 : Techniques de fertilisation et d'irrigation du cacao
-Annexe 3 : Bonnes pratiques agricoles pour la production de cacao
-Notez que ce cahier des charges est un exemple et peut être adapté en fonction des besoins spécifiques de l'entreprise.
-
+#ReactNative #Calculatrice #DéveloppementMobile #CodingLife
