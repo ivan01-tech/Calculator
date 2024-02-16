@@ -28,13 +28,6 @@ export const styles = StyleSheet.create({
     textAlign: 'right',
     fontFamily: 'Montserrat-Medium',
   },
-  cal_btn: {
-    flex: 1,
-    gap: 20,
-
-    backgroundColor: colors.primary_bg,
-    justifyContent: 'flex-end',
-  },
   wrap_btn: {
     flexDirection: 'row',
     gap: 8,
@@ -51,6 +44,12 @@ export const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: colors.secondary_btn,
   },
+  cal_btn: {
+    flex: 1,
+    gap: 20,
+    backgroundColor: colors.primary_bg,
+    justifyContent: 'flex-end',
+  },
   text_btn: {
     fontSize: 25,
     fontFamily: 'Montserrat-Medium',
@@ -58,7 +57,7 @@ export const styles = StyleSheet.create({
     textAlign: 'center',
   },
   equal_btn: {
-    width: widthPercentageToDP(`${cal_btn_width}%`) * 2,
+    width: widthPercentageToDP(`${cal_btn_width}%`) * 2 + 8,
     backgroundColor: colors.text_color,
   },
   del_btn: {

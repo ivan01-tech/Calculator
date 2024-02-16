@@ -6,6 +6,7 @@ import {colors} from '../utils/colors';
 import {styles as globalStyles} from '../utils/globalStyles';
 import DigitButton from '../components/DigitButton';
 import OperationButton from '../components/OperationButton';
+
 const operations = {
   add: '+',
   mod: '%',
@@ -19,7 +20,7 @@ enum CalculatorActionKind {
   EVALUATE = 'EVALUATE',
   OPERATION = 'OPERATION',
   EQUAL = 'EQUAL',
-  REMOVE_DIGIT = 'DIV',
+  REMOVE_DIGIT = 'REMOVE_DIGIT',
   DEL = 'DEL',
   ADD_DIGIT = 'ADD_DIGIT',
 }
@@ -33,9 +34,11 @@ type CalculatorState = {
   operation: string | null;
   currentOperand: string | null;
   previousOperand: string | null;
+  override: boolean;
 };
 const initialState: CalculatorState = {
   operation: null,
+  override: false,
   currentOperand: null,
   previousOperand: null,
 };
@@ -45,6 +48,13 @@ function calculatorReducer(state: CalculatorState, action: CalculatorAction) {
 
   switch (type) {
     case CalculatorActionKind.ADD_DIGIT:
+      if (state.override) {
+        return {
+          ...initialState,
+          override: false,
+          currentOperand: `${payload}`,
+        };
+      }
       if (state.currentOperand == null) {
         return {
           ...state,
@@ -91,33 +101,47 @@ function calculatorReducer(state: CalculatorState, action: CalculatorAction) {
         currentOperand: null,
       };
     case CalculatorActionKind.REMOVE_DIGIT:
+      if (state.override) {
+        return initialState;
+      }
+      if (state.currentOperand === null) {
+        return state;
+      }
+
+      if (state.currentOperand.length === 1) {
+        return {...state, currentOperand: null};
+      }
       return {
         ...state,
-        currentOperand: `${state.currentOperand?.slice(
-          0,
-          state.currentOperand.length - 1,
-        )}`,
+        currentOperand: `${state.currentOperand?.slice(0, -1)}`,
       };
     case CalculatorActionKind.CLEAR:
       return initialState;
 
     case CalculatorActionKind.EQUAL:
-      if (state.currentOperand == null && state.operation == null) {
+      if (
+        state.currentOperand == null ||
+        state.previousOperand == null ||
+        state.operation == null
+      ) {
         return state;
       }
+      state.override = true;
+
       if (state.currentOperand == null && state.previousOperand != null) {
         return {
           ...state,
           previousOperand: state.currentOperand,
           currentOperand: null,
-          operation: payload,
+          operation: null,
+          override: true,
         };
       }
       return {
         ...state,
-        previousOperand: evaluate(state),
-        operation: payload,
-        currentOperand: null,
+        currentOperand: evaluate(state),
+        operation: null,
+        previousOperand: null,
       };
 
     default:
@@ -154,6 +178,22 @@ function evaluate({
   return result;
 }
 
+const INTERGER_FORMAT = new Intl.NumberFormat('fr-CM', {
+  maximumFractionDigits: 0,
+  style: 'decimal',
+});
+const formatNumber = (operand: string | null) => {
+  if (operand === null) {
+    return operand;
+  }
+  const [integer, decimal] = operand.split('.');
+
+  if (decimal == null) {
+    return INTERGER_FORMAT.format(Number(integer));
+  }
+
+  return `${INTERGER_FORMAT.format(Number(integer))}.${decimal}`;
+};
 const Calculator = () => {
   const [calState, dispatch] = useReducer(calculatorReducer, initialState);
   //
@@ -181,12 +221,16 @@ const Calculator = () => {
       <View style={globalStyles.result_view}>
         <View>
           <Text style={globalStyles.text_result}>{`${
-            calState.previousOperand ? calState.previousOperand : ''
+            calState.previousOperand
+              ? formatNumber(calState.previousOperand)
+              : ''
           }${calState.operation ? calState.operation : ''}`}</Text>
         </View>
         <View>
           <Text style={[globalStyles.text_result, globalStyles.text_op]}>
-            {calState.currentOperand ? calState.currentOperand : ''}
+            {calState.currentOperand
+              ? formatNumber(calState.currentOperand)
+              : ''}
           </Text>
         </View>
       </View>
